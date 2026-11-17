@@ -1,0 +1,788 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Patmos Motion Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&display=swap">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+</head>
+<body>
+<style>
+/* Layout: Patmos web — 1156 px content column, 24 px gutters, dark-first like the Figma specs; all motion from the Patmos motion tokens */
+:root {
+  --bg: #000000; --fg: #ffffff; --fg-2: #c6c6c6; --fg-3: #8d8d8d;
+  --layer-1: #161616; --layer-2: #262626; --layer-3: #3d3d3d;
+  --border: #3d3d3d; --border-strong: #8d8d8d;
+  --inverse-bg: #ffffff; --inverse-fg: #000000; --btn-hover: #dedede;
+  --brand: #20e6bf; --brand-tile: #0b2a24; --link: #afc0ff; --link-hover: #5a7fed; --nav-link: #ffffff; --nav-link-hover: #b5b5b5; --danger: #ff8389;
+  --success-bg: #032b23;
+  --font: "Graphik Web", "Graphik", "Hanken Grotesk", Arial, sans-serif;
+
+  --ease-standard: cubic-bezier(0.75, 0.02, 0.5, 1);
+  --ease-enter: cubic-bezier(0, 0, 0.5, 1);
+  --ease-exit: cubic-bezier(0.75, 0.02, 1, 1);
+  --duration-short-1: 150ms; /* State change */ --duration-short-2: 200ms; /* Exit */
+  --delay-short: 50ms; /* Delay before content fades in */
+  --duration-medium-1: 250ms; --duration-medium-2: 300ms;
+  --move: 1;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #ffffff; --fg: #000000; --fg-2: #525252; --fg-3: #8d8d8d;
+    --layer-1: #f4f4f4; --layer-2: #f4f4f4; --layer-3: #dedede;
+    --border: #dedede; --border-strong: #8d8d8d;
+    --inverse-bg: #000000; --inverse-fg: #ffffff; --btn-hover: #3d3d3d;
+    --brand: #00a67e; --brand-tile: #e3f8ef; --link: #2c5bff; --link-hover: #5a7fed; --nav-link: #000000; --nav-link-hover: #525252; --danger: #da1e28; --success-bg: #e3f8ea;
+    color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #ffffff; --fg: #000000; --fg-2: #525252; --fg-3: #8d8d8d;
+  --layer-1: #f4f4f4; --layer-2: #f4f4f4; --layer-3: #dedede;
+  --border: #dedede; --border-strong: #8d8d8d;
+  --inverse-bg: #000000; --inverse-fg: #ffffff; --btn-hover: #3d3d3d;
+  --brand: #00a67e; --brand-tile: #e3f8ef; --link: #2c5bff; --link-hover: #5a7fed; --nav-link: #000000; --nav-link-hover: #525252; --danger: #da1e28; --success-bg: #e3f8ea;
+  color-scheme: light;
+}
+@media (prefers-reduced-motion: reduce) { :root { --move: 0; } }
+
+* { box-sizing: border-box; }
+html { scroll-padding-top: 80px; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 16px; line-height: 1.35; -webkit-font-smoothing: antialiased;
+  transition: background-color var(--duration-short-1) var(--ease-enter), color var(--duration-short-1) var(--ease-enter); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 60; background: var(--bg); }
+a { color: inherit; }
+button { font: inherit; }
+:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
+.wrap { max-width: calc(1156px + 48px); margin-inline: auto; padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); }
+.h1 { margin: 0; font-weight: 500; font-size: clamp(44px, 6.4vw, 80px); line-height: 1.05; letter-spacing: -0.035em; text-wrap: balance; }
+.h2 { margin: 0; font-weight: 500; font-size: clamp(32px, 4vw, 48px); line-height: 1.15; letter-spacing: -0.03em; text-wrap: balance; max-width: 18ch; }
+.lead { margin: 0; font-size: 18px; line-height: 1.45; color: var(--fg-2); max-width: 60ch; }
+.muted { color: var(--fg-2); }
+.sec { padding-block: 88px; }
+
+/* Buttons (state change) */
+/* Design System button tokens (Components/Button). Dark page = DS Inverse theme, light page = DS Default.
+   The cookie banner sits on the opposite surface, so it takes the other theme's set. */
+:root {
+  --btn-primary: #ffffff; --btn-primary-hover: #f5f5f5; --btn-primary-active: #ffffff; --btn-primary-label: #000000;
+  --btn-secondary: #dedede; --btn-secondary-hover: #f5f5f5; --btn-secondary-active: #ffffff; --btn-secondary-label: #ffffff;
+}
+:root .ck {
+  --btn-primary: #000000; --btn-primary-hover: #161616; --btn-primary-active: #000000; --btn-primary-label: #ffffff;
+  --btn-secondary: #262626; --btn-secondary-hover: #161616; --btn-secondary-active: #000000; --btn-secondary-label: #000000;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --btn-primary: #000000; --btn-primary-hover: #161616; --btn-primary-active: #000000; --btn-primary-label: #ffffff;
+    --btn-secondary: #262626; --btn-secondary-hover: #161616; --btn-secondary-active: #000000; --btn-secondary-label: #000000;
+  }
+  :root:not([data-theme="dark"]) .ck {
+    --btn-primary: #ffffff; --btn-primary-hover: #f5f5f5; --btn-primary-active: #ffffff; --btn-primary-label: #000000;
+    --btn-secondary: #dedede; --btn-secondary-hover: #f5f5f5; --btn-secondary-active: #ffffff; --btn-secondary-label: #ffffff;
+  }
+}
+:root[data-theme="light"] {
+  --btn-primary: #000000; --btn-primary-hover: #161616; --btn-primary-active: #000000; --btn-primary-label: #ffffff;
+  --btn-secondary: #262626; --btn-secondary-hover: #161616; --btn-secondary-active: #000000; --btn-secondary-label: #000000;
+}
+:root[data-theme="light"] .ck {
+  --btn-primary: #ffffff; --btn-primary-hover: #f5f5f5; --btn-primary-active: #ffffff; --btn-primary-label: #000000;
+  --btn-secondary: #dedede; --btn-secondary-hover: #f5f5f5; --btn-secondary-active: #ffffff; --btn-secondary-label: #ffffff;
+}
+.pbtn { appearance: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 20px; border-radius: 999px; border: 1px solid var(--btn-primary);
+  background: var(--btn-primary); color: var(--btn-primary-label); font-size: 15px; font-weight: 500; text-decoration: none;
+  transition: background-color var(--duration-short-1) var(--ease-enter), border-color var(--duration-short-1) var(--ease-enter), color var(--duration-short-1) var(--ease-enter); }
+.pbtn:not(:disabled):hover { background: var(--btn-primary-hover); border-color: var(--btn-primary-hover); }
+.pbtn:not(:disabled):active { background: var(--btn-primary-active); border-color: var(--btn-primary-active); }
+.pbtn:focus-visible { transition: none; }
+/* Secondary: 1px outline in button-secondary; on hover the outline and the label both take button-secondary-hover */
+.pbtn.ghost { background: transparent; color: var(--btn-secondary-label); border-color: var(--btn-secondary); }
+.pbtn.ghost:not(:disabled):hover { background: transparent; color: var(--btn-secondary-hover); border-color: var(--btn-secondary-hover); }
+.pbtn.ghost:not(:disabled):active { background: transparent; border-color: var(--btn-secondary-active); }
+.pbtn.small { height: 34px; padding: 0 14px; font-size: 14px; }
+
+/* Link (state change for color, change in place for the chevron: 2 px nudge) */
+.lk { display: inline-flex; align-items: center; gap: 6px; color: var(--link); text-decoration: none; font-size: 17px;
+  transition: color var(--duration-short-1) var(--ease-enter); }
+.lk svg { flex: none; transition: transform calc(var(--duration-medium-2) * var(--move)) var(--ease-standard); }
+.lk.small { font-size: 15px; }
+.lk:hover { color: var(--link-hover); }
+.lk:active { color: var(--link); }
+.lk:hover svg { transform: translateX(calc(2px * var(--move))); }
+
+/* Link Navigation (menus, footers, card actions): dims on hover, icon moves 2 px the way it points */
+.ln { display: inline-flex; align-items: center; gap: 6px; color: var(--nav-link); text-decoration: none; font-size: 17px;
+  transition: color var(--duration-short-1) var(--ease-enter); }
+.ln.small { font-size: 15px; }
+.ln svg { flex: none; transition: transform calc(var(--duration-medium-2) * var(--move)) var(--ease-standard); }
+.ln:hover { color: var(--nav-link-hover); }
+.ln:active { color: var(--nav-link); }
+.ln:hover .i-next { transform: translateX(calc(2px * var(--move))); }
+.ln:hover .i-prev { transform: translateX(calc(-2px * var(--move))); }
+
+/* ---------- Page transition: old page exits, new page enters ---------- */
+.page { transition: opacity var(--duration-short-2) var(--ease-exit); }
+.page.leaving { opacity: 0; }
+.page.entering { opacity: 0; transform: translateY(calc(8px * var(--move))); transition: none; }
+.page.entered { transition: opacity var(--duration-medium-1) var(--ease-enter), transform calc(var(--duration-medium-1) * var(--move)) var(--ease-enter); }
+
+/* ---------- Header ---------- */
+.hdr { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 50; background: var(--bg); border-bottom: 1px solid var(--border);
+  transition: background-color var(--duration-short-1) var(--ease-enter), border-color var(--duration-short-1) var(--ease-enter); }
+.hdr-bar { height: 72px; display: flex; align-items: center; gap: 24px; }
+.logo { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 22px; letter-spacing: -0.04em; color: var(--fg); text-decoration: none; flex: none; }
+.logo-svg { display: block; flex: none; }
+.nav { display: flex; gap: 8px; margin-left: auto; }
+.nav-item { appearance: none; border: 0; background: none; color: var(--fg-2); cursor: pointer; display: inline-flex; align-items: center; gap: 4px; padding: 10px 8px; font-size: 14px;
+  transition: color var(--duration-short-1) var(--ease-enter); }
+.nav-item:hover, .nav-item[aria-expanded="true"] { color: var(--fg); }
+.nav-item svg { transition: transform calc(var(--duration-medium-2) * var(--move)) var(--ease-standard); }
+.nav-item[aria-expanded="true"] svg { transform: rotate(180deg); }
+.hdr-right { margin-left: auto; display: flex; align-items: center; gap: 20px; font-size: 14px; flex: none; }
+.hdr-right .acc { color: var(--nav-link); text-decoration: none; transition: color var(--duration-short-1) var(--ease-enter); }
+.hdr-right .acc:hover { color: var(--nav-link-hover); }
+.mega { position: absolute; left: 0; right: 0; top: 100%; background: var(--bg); display: grid; grid-template-rows: 0fr; border-bottom: 1px solid transparent;
+  transition: grid-template-rows calc(var(--duration-medium-2) * var(--move)) var(--ease-standard), border-color var(--duration-short-1) var(--ease-enter); }
+.hdr.open .mega { grid-template-rows: 1fr; border-bottom-color: var(--border); }
+.mega > div { overflow: hidden; min-height: 0; }
+.mega-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 220px)); gap: 48px; padding-block: 32px 40px;
+  opacity: 0; transform: translateY(calc(-4px * var(--move)));
+  transition: opacity var(--duration-short-2) var(--ease-exit), transform calc(var(--duration-short-2) * var(--move)) var(--ease-exit); }
+.hdr.open .mega-cols { opacity: 1; transform: none;
+  transition: opacity var(--duration-medium-1) var(--ease-enter) var(--delay-short), transform calc(var(--duration-medium-1) * var(--move)) var(--ease-enter) var(--delay-short); }
+.mega-cols.swap { transition: opacity var(--duration-short-1) var(--ease-enter) !important; }
+.mega h5 { margin: 0 0 12px; font-size: 12px; font-weight: 400; color: var(--fg-3); }
+.mega a { display: block; padding: 5px 0; font-size: 15px; color: var(--nav-link); text-decoration: none; transition: color var(--duration-short-1) var(--ease-enter); }
+.mega a:hover { color: var(--nav-link-hover); }
+.scrim { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.4); opacity: 0; visibility: hidden;
+  transition: opacity var(--duration-short-2) var(--ease-exit), visibility 0s linear var(--duration-short-2); }
+.scrim.on { opacity: 1; visibility: visible; transition: opacity var(--duration-medium-1) var(--ease-enter), visibility 0s; }
+
+/* Mobile menu */
+.burger { display: none; position: relative; appearance: none; border: 0; background: none; color: var(--fg); width: 40px; height: 40px; margin-left: auto; cursor: pointer; place-items: center; }
+.burger svg { position: absolute; transition: opacity var(--duration-short-1) var(--ease-enter); }
+.burger .i-x { opacity: 0; }
+.hdr.mopen .burger .i-menu { opacity: 0; }
+.hdr.mopen .burger .i-x { opacity: 1; }
+.mmenu { position: fixed; left: 0; right: 0; top: calc(73px + env(safe-area-inset-top, 0px)); bottom: 0; z-index: 49; background: var(--bg); overflow: hidden;
+  opacity: 0; visibility: hidden;
+  transition: opacity var(--duration-short-2) var(--ease-exit), visibility 0s linear var(--duration-short-2); }
+.hdr.mopen .mmenu { opacity: 1; visibility: visible;
+  transition: opacity var(--duration-medium-1) var(--ease-enter), visibility 0s; }
+.mlevel { position: absolute; inset: 0 0 170px; overflow-y: auto; padding: 16px max(24px, env(safe-area-inset-left, 0px)); transition: transform calc(var(--duration-medium-2) * var(--move)) var(--ease-standard); }
+.ml2 { transform: translateX(100%); }
+.hdr.sub .ml1 { transform: translateX(-100%); }
+.hdr.sub .ml2 { transform: none; }
+.mrow { appearance: none; border: 0; background: none; color: var(--fg); width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 14px 0; font-size: 20px; cursor: pointer; text-align: left; }
+.mback { appearance: none; border: 0; background: none; color: var(--fg); display: inline-flex; align-items: center; gap: 8px; padding: 12px 0 16px; font-size: 20px; cursor: pointer; }
+.ml2 h5 { margin: 16px 0 6px; font-size: 12px; font-weight: 400; color: var(--fg-3); }
+.ml2 a { display: block; padding: 7px 0; font-size: 15px; text-decoration: none; }
+.mcta { position: absolute; left: 24px; right: 24px; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 8px; }
+.mcta .pbtn { justify-content: center; }
+@media (max-width: 899px) {
+  .nav, .hdr-right { display: none; }
+  .burger { display: grid; }
+}
+@media (min-width: 900px) { .mmenu { display: none; } }
+
+/* ---------- Home ---------- */
+.hero { padding-block: 112px 104px; display: flex; flex-direction: column; gap: 24px; align-items: flex-start; }
+.pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px; border: 1px solid var(--border); border-radius: 999px; font-size: 14px; text-decoration: none;
+  transition: border-color var(--duration-short-1) var(--ease-enter); }
+.pill:hover { border-color: var(--border-strong); }
+.pill .tag { border: 1px solid var(--brand); color: var(--brand); border-radius: 999px; padding: 1px 8px; font-size: 12px; }
+.pill .sep { color: var(--fg-3); }
+.pill svg { transition: transform calc(var(--duration-medium-2) * var(--move)) var(--ease-standard); }
+.pill:hover svg { transform: translateX(calc(2px * var(--move))); }
+.hero .lead { margin-bottom: 8px; }
+
+.tgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 48px 32px; margin-top: 56px; }
+@media (max-width: 900px) { .tgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .tgrid { grid-template-columns: 1fr; } }
+.tile { width: 40px; height: 40px; border-radius: 4px; background: var(--brand-tile); color: var(--brand); display: grid; place-items: center; margin-bottom: 18px; }
+.tgrid p { margin: 0; color: var(--fg-2); font-size: 15px; line-height: 1.45; max-width: 36ch; }
+.tgrid b { color: var(--fg); font-weight: 500; }
+
+.car-head { margin-bottom: 48px; }
+.car-view { overflow: hidden; margin-right: calc(-1 * max(24px, env(safe-area-inset-right, 0px))); }
+.car-track { display: flex; gap: 24px; transition: transform calc(var(--duration-medium-2) * var(--move)) var(--ease-standard); }
+.story { flex: none; width: min(684px, 86vw); display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; min-height: 404px; }
+.story .img { background: var(--layer-1); }
+.story .txt { padding: 48px; display: flex; flex-direction: column; }
+.story .brandname { font-weight: 600; font-size: 22px; letter-spacing: .08em; text-transform: uppercase; }
+.story small { margin-top: auto; font-size: 12px; color: var(--fg-2); }
+.story h3 { margin: 10px 0 24px; font-weight: 500; font-size: 20px; line-height: 1.3; letter-spacing: -0.01em; }
+@media (max-width: 640px) { .story { grid-template-columns: 1fr; min-height: 0; } .story .img { min-height: 200px; } .story .txt { padding: 28px; } .story small { margin-top: 32px; } }
+.car-nav { display: flex; justify-content: flex-end; gap: 12px; margin-top: 40px; }
+.car-btn { appearance: none; width: 40px; height: 40px; border-radius: 50%; border: 0; cursor: pointer; display: grid; place-items: center; background: var(--inverse-bg); color: var(--inverse-fg);
+  transition: background-color var(--duration-short-1) var(--ease-enter), color var(--duration-short-1) var(--ease-enter); }
+.car-btn:not(:disabled):hover { background: var(--btn-hover); }
+.car-btn:disabled { background: var(--layer-2); color: var(--fg-3); cursor: default; }
+
+.itb { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: center; }
+.itb + .itb { margin-top: 0; }
+.itb .img { aspect-ratio: 1; border-radius: 8px; max-width: 100%; }
+.itb .copy { padding: 48px; display: flex; flex-direction: column; gap: 20px; align-items: flex-start; }
+.itb .copy .h2 { font-size: clamp(30px, 3.4vw, 44px); }
+.itb .copy p { margin: 0; color: var(--fg-2); max-width: 46ch; }
+.img-campus, .img-servers { background: var(--layer-1); }
+@media (max-width: 760px) { .itb { grid-template-columns: 1fr; } .itb .copy { padding: 32px 0 48px; } .itb.rev .img { order: -1; } }
+
+.cgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-top: 48px; }
+@media (max-width: 900px) { .cgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .cgrid { grid-template-columns: 1fr; } }
+.framed { border: 1px solid var(--border); border-radius: 8px; padding: 24px; display: flex; flex-direction: column; gap: 10px; min-height: 202px; }
+.framed h3 { margin: 0; font-weight: 500; font-size: 18px; display: flex; align-items: center; gap: 8px; }
+.framed .new { background: var(--brand); color: #000; font-size: 11px; padding: 1px 7px; border-radius: 999px; font-weight: 500; }
+.framed p { margin: 0; color: var(--fg-2); font-size: 15px; line-height: 1.45; }
+.framed .acts { margin-top: auto; padding-top: 18px; display: flex; gap: 24px; flex-wrap: wrap; }
+
+.cta { text-align: center; padding-block: 128px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
+.cta .h2 { max-width: none; }
+.cta .lead { max-width: 52ch; }
+
+/* ---------- Contact ---------- */
+.contact { display: grid; grid-template-columns: 5fr 7fr; gap: 64px; padding-block: 112px 96px; }
+@media (max-width: 900px) { .contact { grid-template-columns: 1fr; gap: 48px; padding-block: 72px; } }
+.contact-intro { display: flex; flex-direction: column; gap: 24px; }
+.contact-intro h3 { margin: 16px 0 4px; font-weight: 500; font-size: 18px; }
+.contact-intro .tel { color: var(--link); font-size: 15px; user-select: all; }
+.contact-intro .lk-blue { color: var(--link); font-size: 15px; text-decoration: none; transition: color var(--duration-short-1) var(--ease-enter); }
+.contact-intro .lk-blue:hover { color: var(--link-hover); }
+.feat { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 16px; margin-top: 8px; }
+.feat .tile { margin: 0; }
+.feat b { display: block; font-weight: 500; font-size: 15px; margin-bottom: 4px; }
+.feat span { color: var(--fg-2); font-size: 15px; }
+.form { display: flex; flex-direction: column; gap: 14px; }
+.form h2 { margin: 0 0 6px; font-weight: 500; font-size: 18px; }
+.fld { position: relative; display: block; }
+.fld input, .fld textarea { width: 100%; height: 56px; padding: 22px 16px 6px; border: 1px solid var(--border-strong); border-radius: 8px; background: transparent; color: var(--fg); font: 400 16px/1.3 var(--font); outline: none;
+  transition: border-color var(--duration-short-1) var(--ease-enter); }
+.fld textarea { height: 140px; min-height: 96px; resize: vertical; padding: 26px 16px 10px; line-height: 1.4; }
+.fld input:hover, .fld textarea:hover { border-color: var(--fg-2); }
+.fld input:focus, .fld textarea:focus { border-color: var(--fg); }
+/* Blue focus ring only when the field is reached with the Tab key, never on click */
+.fld input:focus-visible, .fld textarea:focus-visible, .sel select:focus-visible { outline: none; }
+.kb-focus { outline: 2px solid var(--link) !important; outline-offset: 2px; }
+.fld.invalid input, .fld.invalid textarea, .sel.invalid select { border-color: var(--danger); }
+.fld > span { position: absolute; left: 17px; top: 17px; font-size: 16px; color: var(--fg); pointer-events: none; transform-origin: left top;
+  transition: transform calc(var(--duration-medium-2) * var(--move)) var(--ease-standard), color var(--duration-short-1) var(--ease-enter); }
+.fld input:focus + span, .fld input:not(:placeholder-shown) + span,
+.fld textarea:focus + span, .fld textarea:not(:placeholder-shown) + span { transform: translateY(-9px) scale(0.75); color: var(--fg-3); }
+.sel { position: relative; display: block; }
+.sel select { appearance: none; -webkit-appearance: none; width: 100%; height: 56px; padding: 0 48px 0 140px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--bg); color: var(--fg-2); font: 400 16px/1.3 var(--font);
+  text-align: right; text-align-last: right; cursor: pointer; outline: none; transition: border-color var(--duration-short-1) var(--ease-enter); }
+.sel select:hover { border-color: var(--fg-2); }
+.sel select:focus { border-color: var(--fg); }
+.sel .sel-label { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--fg); pointer-events: none; }
+.sel .sel-ico { position: absolute; right: 14px; top: 50%; width: 20px; height: 20px; margin-top: -10px; pointer-events: none; }
+.sel .sel-ico svg { position: absolute; inset: 0; transition: opacity var(--duration-short-1) var(--ease-enter); }
+.sel .i-x { opacity: 0; }
+.sel select:focus ~ .sel-ico .i-chev { opacity: 0; }
+.sel select:focus ~ .sel-ico .i-x { opacity: 1; }
+.err-slot { display: grid; grid-template-rows: 0fr; transition: grid-template-rows calc(var(--duration-medium-2) * var(--move)) var(--ease-standard); }
+.err-slot.in { grid-template-rows: 1fr; }
+.err-slot > div { overflow: hidden; min-height: 0; }
+.err { margin: 0; padding-top: 6px; font-size: 14px; color: var(--danger); opacity: 0; transform: translateY(calc(-4px * var(--move)));
+  transition: opacity var(--duration-short-2) var(--ease-exit), transform calc(var(--duration-short-2) * var(--move)) var(--ease-exit); }
+.err-slot.in .err { opacity: 1; transform: none;
+  transition: opacity var(--duration-medium-1) var(--ease-enter) var(--delay-short), transform calc(var(--duration-medium-1) * var(--move)) var(--ease-enter) var(--delay-short); }
+.cb { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 12px; align-items: start; cursor: pointer; font-size: 14px; color: var(--fg-2); margin-top: 4px; }
+.cb input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.cb-box { width: 20px; height: 20px; border: 1.5px solid var(--fg); border-radius: 2px; display: grid; place-items: center; color: var(--inverse-fg);
+  transition: background-color var(--duration-short-1) var(--ease-enter), border-color var(--duration-short-1) var(--ease-enter); }
+.cb-box svg { opacity: 0; transition: opacity var(--duration-short-1) var(--ease-enter); }
+.cb input:checked + .cb-box { background: var(--fg); }
+.cb:hover .cb-box { border-color: var(--fg-2); }
+.cb input:checked + .cb-box { border-color: var(--fg); }
+.cb input:checked + .cb-box svg { opacity: 1; }
+.cb input:focus-visible + .cb-box { outline: 2px solid var(--link); outline-offset: 2px; }
+.fine { margin: 0; font-size: 13px; color: var(--fg-2); }
+.fine a { color: var(--link); text-decoration: none; }
+.form-end { display: flex; align-items: center; gap: 16px; margin-top: 4px; }
+.ntf-slot { display: grid; grid-template-rows: 0fr; transition: grid-template-rows calc(var(--duration-medium-2) * var(--move)) var(--ease-standard); }
+.ntf-slot.in { grid-template-rows: 1fr; }
+.ntf-slot > div { overflow: hidden; min-height: 0; }
+.ntf { display: grid; grid-template-columns: 22px minmax(0, 1fr) 32px; gap: 12px; align-items: start; padding: 16px; border-radius: 4px; background: var(--success-bg); margin-bottom: 4px;
+  opacity: 0; transform: translateY(calc(-8px * var(--move)));
+  transition: opacity var(--duration-short-2) var(--ease-exit), transform calc(var(--duration-short-2) * var(--move)) var(--ease-exit); }
+.ntf-slot.in .ntf { opacity: 1; transform: none;
+  transition: opacity var(--duration-medium-1) var(--ease-enter) var(--delay-short), transform calc(var(--duration-medium-1) * var(--move)) var(--ease-enter) var(--delay-short); }
+.ntf b { display: block; font-weight: 500; margin-bottom: 2px; }
+.ntf span { font-size: 14px; color: var(--fg-2); }
+.ntf .ico { color: var(--brand); }
+.ntf-close { appearance: none; border: 0; background: none; color: var(--fg); width: 32px; height: 32px; margin-top: -6px; border-radius: 4px; cursor: pointer; display: grid; place-items: center;
+  transition: background-color var(--duration-short-1) var(--ease-enter); }
+.ntf-close:hover { background: color-mix(in srgb, var(--fg) 10%, transparent); }
+
+.support { padding-block: 72px 96px; }
+.sgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-top: 48px; }
+@media (max-width: 900px) { .sgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .sgrid { grid-template-columns: 1fr; } }
+.clink { display: flex; flex-direction: column; gap: 12px; padding: 24px; border-radius: 8px; background: var(--layer-2); text-decoration: none; min-height: 202px;
+  transition: background-color var(--duration-short-1) var(--ease-enter); }
+.clink:hover { background: var(--layer-3); }
+.clink:active { background: var(--border-strong); }
+.clink b { font-weight: 500; font-size: 16px; }
+.clink span { color: var(--fg-2); font-size: 15px; line-height: 1.45; }
+.clink svg { margin-top: auto; transition: transform calc(var(--duration-medium-2) * var(--move)) var(--ease-standard); }
+.clink:hover svg { transform: translateX(calc(2px * var(--move))); }
+
+/* ---------- Support ---------- */
+.help { text-align: center; padding-block: 128px 72px; display: flex; flex-direction: column; align-items: center; gap: 40px; }
+.help .reach { text-align: left; }
+.help .reach b { display: block; font-weight: 500; font-size: 18px; margin-bottom: 4px; }
+.help .reach span { color: var(--link); font-size: 15px; user-select: all; }
+.faq { padding-block: 72px 120px; }
+.faq-list { max-width: 684px; margin: 48px auto 0; border-top: 0; }
+.faq-item { border-bottom: 1px solid var(--border); }
+.faq-item:first-child.open { border-bottom-color: var(--border-strong); }
+.faq-q { appearance: none; border: 0; background: none; color: var(--fg); width: 100%; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 16px;
+  padding: 18px 14px; text-align: left; font-size: 18px; font-weight: 500; letter-spacing: -0.01em;
+  transition: color var(--duration-short-1) var(--ease-enter); }
+.faq-q:hover { color: var(--fg-2); }
+.faq-q svg { flex: none; transition: transform calc(var(--duration-medium-2) * var(--move)) var(--ease-standard); }
+.faq-item.open .faq-q svg { transform: rotate(180deg); }
+.faq-a { display: grid; grid-template-rows: 0fr; transition: grid-template-rows calc(var(--duration-medium-2) * var(--move)) var(--ease-standard); }
+.faq-item.open .faq-a { grid-template-rows: 1fr; }
+.faq-a > div { overflow: hidden; min-height: 0; }
+.faq-a p { margin: 0; padding: 0 14px 28px; color: var(--fg-2); font-size: 15px; line-height: 1.5;
+  opacity: 0; transform: translateY(calc(-4px * var(--move)));
+  transition: opacity var(--duration-short-2) var(--ease-exit), transform calc(var(--duration-short-2) * var(--move)) var(--ease-exit); }
+.faq-item.open .faq-a p { opacity: 1; transform: none;
+  transition: opacity var(--duration-medium-1) var(--ease-enter) var(--delay-short), transform calc(var(--duration-medium-1) * var(--move)) var(--ease-enter) var(--delay-short); }
+.faq-a p.ph { font-style: italic; color: var(--fg-3); }
+.faq .h2 { max-width: none; }
+
+/* ---------- Footer ---------- */
+.ftr { border-top: 1px solid var(--border); padding-block: 56px 40px; }
+.fcols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px 32px; }
+@media (max-width: 640px) { .fcols { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.fcols h4 { margin: 0 0 16px; font-size: 14px; font-weight: 500; }
+.fcols ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.fcols a, .fbot a { color: var(--nav-link); text-decoration: none; font-size: 15px; transition: color var(--duration-short-1) var(--ease-enter); }
+.fcols a:hover, .fbot a:hover, .linkbtn:hover { color: var(--nav-link-hover); }
+.linkbtn { appearance: none; border: 0; background: none; padding: 0; cursor: pointer; color: var(--nav-link); font-size: 15px; transition: color var(--duration-short-1) var(--ease-enter); }
+.fbot { margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 16px 24px; flex-wrap: wrap; font-size: 14px; color: var(--fg-2); }
+.fbot .links { margin-left: auto; display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+.theme { position: relative; display: inline-flex; padding: 3px; border: 1px solid var(--border); border-radius: 999px; }
+.theme button { position: relative; z-index: 1; appearance: none; border: 0; background: none; width: 26px; height: 22px; display: grid; place-items: center; color: var(--fg-3); cursor: pointer; border-radius: 999px;
+  transition: color var(--duration-short-1) var(--ease-enter); }
+.theme button[aria-pressed="true"] { color: var(--fg); }
+.theme-ind { position: absolute; top: 3px; left: 3px; width: 26px; height: 22px; border-radius: 999px; background: var(--layer-3);
+  transition: transform calc(var(--duration-medium-2) * var(--move)) var(--ease-standard); }
+
+/* ---------- Cookie banner ---------- */
+.ck { position: fixed; z-index: 45; left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  max-width: 1156px; margin-inline: auto; display: flex; align-items: center; gap: 16px 32px; flex-wrap: wrap; padding: 22px 28px; border-radius: 4px;
+  background: var(--inverse-bg); color: var(--inverse-fg);
+  opacity: 0; visibility: hidden; transform: translateY(calc(16px * var(--move)));
+  transition: opacity var(--duration-short-2) var(--ease-exit), transform calc(var(--duration-short-2) * var(--move)) var(--ease-exit), visibility 0s linear var(--duration-short-2); }
+.ck.on { opacity: 1; visibility: visible; transform: none;
+  transition: opacity var(--duration-medium-1) var(--ease-enter), transform calc(var(--duration-medium-1) * var(--move)) var(--ease-enter), visibility 0s; }
+.ck p { margin: 0; flex: 1 1 320px; font-size: 14px; line-height: 1.45; }
+.ck .acts { display: flex; gap: 8px; }
+/* Banner buttons use the Button rules above with the banner's own token set (no extra overrides) */
+</style>
+
+<script>(function(){var t='dark';try{var s=localStorage.getItem('patmos-proto-theme');if(s==='light'||s==='dark'||s==='system')t=s;}catch(e){}if(t!=='system')document.documentElement.setAttribute('data-theme',t);document.documentElement.dataset.pref=t;})();</script>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><symbol id="patmos-logo" viewBox="2 1 2558 498"><path fill="currentColor" fill-rule="evenodd" d="M606.0 492.0C591.0 483.7 560.5 469.3 542.3 461.9L529.1 456.5L529.0 286.7L529.0 117.0L574.2 117.2L619.5 117.5L619.8 126.2L620.1 134.8L629.3 128.6C639.5 121.8 650.4 117.1 663.7 113.8C671.3 111.9 675.2 111.6 691.5 111.6C707.5 111.6 712.2 112.0 721.0 113.9C749.1 120.0 771.2 132.1 792.1 152.9C818.1 179.0 833.1 211.6 837.1 251.0C842.0 299.6 825.1 348.8 792.1 382.0C767.7 406.5 738.7 419.9 703.0 423.1C673.2 425.8 646.6 418.9 625.2 402.9L620.0 398.9L620.0 448.4C620.0 475.6 619.7 498.1 619.2 498.4C618.8 498.6 612.8 495.7 606.0 492.0ZM990.5 423.0C942.7 417.7 902.7 390.4 878.7 347.0C864.0 320.3 856.5 282.0 859.9 250.5C864.2 211.1 879.0 179.0 904.9 152.9C925.4 132.3 947.8 120.0 976.0 113.9C984.8 112.0 989.5 111.6 1005.5 111.6C1021.8 111.6 1025.7 111.9 1033.3 113.8C1046.6 117.1 1057.5 121.8 1067.7 128.6L1076.9 134.8L1077.2 126.2L1077.5 117.5L1122.8 117.2L1168.0 117.0L1168.0 267.0L1168.0 417.0L1122.8 416.8L1077.5 416.5L1077.2 407.8L1076.9 399.1L1070.2 404.0C1058.3 412.6 1045.2 418.2 1029.8 421.4C1020.1 423.4 1001.1 424.2 990.5 423.0ZM2109.5 422.9C2055.8 417.3 2008.6 385.0 1984.7 337.5C1963.2 294.5 1962.7 242.8 1983.4 199.7C2004.7 155.4 2045.9 123.7 2095.3 113.8C2111.3 110.6 2141.7 110.6 2156.8 113.8C2199.8 123.1 2234.6 146.3 2257.7 181.0C2288.1 226.4 2292.0 286.2 2268.0 335.5C2239.2 394.7 2175.5 429.8 2109.5 422.9ZM2412.0 423.3C2380.3 421.5 2347.2 413.6 2321.9 401.8L2313.0 397.7L2313.0 353.7L2313.0 309.8L2315.6 311.5C2322.2 315.8 2340.3 325.3 2349.6 329.4C2375.6 340.8 2394.1 345.1 2420.5 345.7C2441.3 346.3 2452.8 344.8 2461.7 340.5C2469.0 336.9 2471.2 333.3 2470.7 326.1C2470.3 321.2 2469.9 320.2 2466.5 317.3C2461.0 312.5 2453.1 310.5 2425.1 306.4C2386.6 300.9 2376.9 298.5 2359.5 290.0C2330.2 275.7 2313.7 251.7 2310.0 217.8C2304.8 171.2 2331.5 134.2 2382.0 118.2C2399.4 112.7 2408.9 111.5 2435.5 111.6C2475.3 111.6 2494.1 115.4 2533.8 131.7C2534.7 132.1 2535.0 141.6 2535.0 174.6L2535.0 217.0L2528.5 213.0C2501.8 196.6 2465.9 186.0 2437.5 186.0C2417.8 186.0 2402.2 190.5 2397.9 197.4C2395.2 201.6 2395.8 209.1 2399.1 212.6C2404.7 218.7 2411.4 220.5 2444.0 225.0C2480.2 230.0 2497.6 234.6 2515.2 243.7C2537.3 255.1 2550.4 271.2 2556.7 294.8C2559.1 303.6 2559.3 306.3 2559.4 323.0C2559.4 344.2 2558.0 351.1 2551.1 365.4C2531.2 406.4 2481.0 427.3 2412.0 423.3ZM2.0 422.8C2.0 422.5 10.1 416.9 20.0 410.4L38.0 398.5L38.0 258.5C38.0 181.5 38.4 118.0 38.8 117.4C39.5 116.3 102.6 74.0 103.5 74.0C103.8 74.0 104.0 88.4 104.0 106.0C104.0 123.6 104.2 138.0 104.5 138.0C104.8 138.0 114.5 131.7 126.0 124.0L147.0 110.0L147.2 77.2L147.5 44.5L180.0 22.8L212.5 1.2L215.1 2.8C216.6 3.8 231.3 13.5 247.9 24.5L277.9 44.5L278.0 77.2L278.0 110.0L299.0 124.0C310.5 131.7 320.2 138.0 320.5 138.0C320.8 138.0 321.0 123.6 321.0 106.0C321.0 88.4 321.2 74.0 321.5 74.0C321.8 74.0 336.6 83.7 354.5 95.7L387.0 117.3L387.0 257.6L387.0 398.0L405.0 410.0C414.9 416.6 423.0 422.2 423.0 422.3C423.0 422.5 415.2 420.9 405.8 418.9C368.7 410.7 327.6 404.5 290.5 401.5C279.5 400.6 267.7 399.7 264.3 399.4L258.1 398.9L257.8 314.2L257.5 229.5L255.2 223.5C252.0 214.9 246.4 207.3 239.7 202.4C214.5 183.8 179.9 194.5 170.0 223.9C168.1 229.8 168.0 232.1 168.0 314.4L168.0 398.8L160.8 399.4C112.4 403.1 87.5 406.0 56.3 411.6C38.6 414.7 6.8 421.4 3.4 422.7C2.7 423.0 2.0 423.0 2.0 422.8ZM1263.0 306.5L1263.0 196.0L1230.0 196.0L1197.0 196.0L1197.2 156.8L1197.5 117.5L1230.2 117.2L1263.0 117.0L1263.0 85.1L1263.0 53.2L1307.9 27.1C1332.6 12.8 1353.0 1.0 1353.4 1.0C1353.7 1.0 1354.0 27.1 1354.0 59.0L1354.0 117.0L1398.8 117.2L1443.5 117.5L1443.5 156.5L1443.5 195.5L1398.8 195.8L1354.0 196.0L1354.0 306.5L1354.0 417.0L1308.5 417.0L1263.0 417.0L1263.0 306.5ZM1467.2 267.2L1467.5 117.5L1512.5 117.5L1557.5 117.5L1557.8 127.8L1558.1 138.1L1563.0 133.8C1573.0 125.2 1586.5 118.6 1604.0 113.7C1610.3 112.0 1614.3 111.6 1629.0 111.7C1644.6 111.7 1647.6 112.0 1656.1 114.2C1675.1 119.3 1690.8 127.9 1705.1 140.8L1711.6 146.8L1717.6 141.8C1740.6 122.0 1772.8 111.0 1807.6 111.0C1845.8 111.0 1874.7 121.6 1896.5 143.4C1913.9 160.9 1924.2 181.2 1930.0 209.7C1933.4 226.6 1934.0 244.7 1934.0 332.8L1934.0 417.0L1888.5 417.0L1843.0 417.0L1843.0 335.7C1843.0 241.5 1842.5 234.6 1834.9 218.4C1823.6 194.3 1794.6 187.2 1766.9 201.6C1759.6 205.4 1750.2 213.3 1746.0 219.2C1743.5 222.7 1743.3 223.4 1744.3 226.8C1745.0 229.3 1745.5 261.0 1745.7 323.8L1746.1 417.0L1700.5 417.0L1655.0 417.0L1655.0 333.8C1655.0 283.7 1654.6 247.7 1654.0 243.5C1651.5 226.4 1646.9 214.9 1639.0 206.6C1621.5 188.1 1585.9 191.0 1564.2 212.6L1558.0 218.8L1558.0 317.9L1558.0 417.0L1512.5 417.0L1467.0 417.0L1467.2 267.2ZM692.0 339.8C694.5 339.2 699.6 337.3 703.5 335.5C721.1 327.4 733.2 313.4 740.1 293.0C744.2 280.7 745.2 264.1 742.5 250.9C735.6 216.3 709.0 193.1 676.3 193.0C667.9 193.0 656.7 195.0 648.9 197.9C641.4 200.7 630.4 208.6 624.6 215.2L620.0 220.5L620.0 267.4L620.0 314.3L628.2 322.4C639.8 333.8 650.0 338.8 666.2 341.0C673.2 341.9 685.2 341.4 692.0 339.8ZM1040.8 338.9C1051.7 336.1 1059.4 331.6 1068.8 322.4L1077.0 314.3L1077.0 267.4L1077.0 220.5L1072.4 215.2C1053.1 193.1 1018.5 186.6 991.5 199.9C972.7 209.2 959.1 227.9 954.5 250.9C951.8 264.0 952.8 280.7 956.9 292.8C964.7 316.0 979.3 331.3 1000.5 338.5C1011.7 342.3 1026.9 342.4 1040.8 338.9ZM2142.4 337.0C2164.5 331.4 2181.3 315.2 2188.8 292.2C2190.8 286.0 2191.4 281.8 2191.8 270.9C2192.4 253.9 2190.7 245.4 2184.3 232.0C2176.0 214.7 2160.6 202.1 2142.0 197.4C2134.2 195.4 2119.8 195.2 2111.5 196.9C2087.5 202.1 2068.6 221.0 2061.9 246.5C2058.9 257.6 2058.9 277.2 2061.9 288.3C2065.9 303.6 2076.4 319.4 2087.6 327.1C2103.6 338.1 2123.9 341.8 2142.4 337.0Z"/></symbol></svg>
+<header class="hdr" id="hdr">
+  <div class="wrap hdr-bar">
+    <a class="logo" href="#home" aria-label="Patmos home"><svg class="logo-svg" style="height:22px;width:113.0px" aria-hidden="true"><use href="#patmos-logo"/></svg></a>
+    <nav class="nav" aria-label="Main">
+      <button class="nav-item" type="button" aria-expanded="false" aria-controls="mega" data-menu="solutions">Solutions <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M3 4.5l3 3 3-3" stroke="currentColor" stroke-width="1.3"/></svg></button>
+      <button class="nav-item" type="button" aria-expanded="false" aria-controls="mega" data-menu="company">Company <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M3 4.5l3 3 3-3" stroke="currentColor" stroke-width="1.3"/></svg></button>
+      <button class="nav-item" type="button" aria-expanded="false" aria-controls="mega" data-menu="resources">Resources <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M3 4.5l3 3 3-3" stroke="currentColor" stroke-width="1.3"/></svg></button>
+    </nav>
+    <div class="hdr-right">
+      <a class="acc" href="#home">My account</a>
+      <a class="pbtn ghost small" href="#contact">Contact sales</a>
+    </div>
+    <button class="burger" type="button" id="burger" aria-expanded="false" aria-controls="mmenu" aria-label="Menu">
+      <svg class="i-menu" width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true"><path d="M3 7h16M3 11h16M3 15h16" stroke="currentColor" stroke-width="1.5"/></svg>
+      <svg class="i-x" width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true"><path d="M5 5l12 12M17 5L5 17" stroke="currentColor" stroke-width="1.5"/></svg>
+    </button>
+  </div>
+  <div class="mega" id="mega"><div><div class="wrap"><div class="mega-cols" id="megaCols"></div></div></div></div>
+  <div class="mmenu" id="mmenu">
+    <div class="mlevel ml1">
+      <button class="mrow" type="button" data-sub="solutions">Solutions <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5l4.5 4.5L6 12.5" stroke="currentColor" stroke-width="1.5"/></svg></button>
+      <button class="mrow" type="button" data-sub="company">Company <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5l4.5 4.5L6 12.5" stroke="currentColor" stroke-width="1.5"/></svg></button>
+      <button class="mrow" type="button" data-sub="resources">Resources <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5l4.5 4.5L6 12.5" stroke="currentColor" stroke-width="1.5"/></svg></button>
+    </div>
+    <div class="mlevel ml2"><button class="mback" type="button" id="mback"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M10 3.5L5.5 8l4.5 4.5" stroke="currentColor" stroke-width="1.5"/></svg><span id="mtitle">Solutions</span></button><div id="msub"></div></div>
+    <div class="mcta"><a class="pbtn ghost" href="#contact">Contact sales</a><a class="pbtn ghost" href="#home">My account</a><a class="pbtn" href="#contact">Get started</a></div>
+  </div>
+</header>
+<div class="scrim" id="scrim"></div>
+
+<!-- ================= HOME ================= -->
+<main class="page" data-page="home">
+  <section class="wrap hero">
+    <a class="pill" href="#home"><span class="tag">New</span>Technology Campus <span class="sep">•</span> <span class="muted">More than a data center</span> <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5l4.5 4.5L6 12.5" stroke="currentColor" stroke-width="1.5"/></svg></a>
+    <h1 class="h1">Infrastructure.<br>Without compromise.</h1>
+    <p class="lead">AI infrastructure, cloud hosting, connectivity, and services designed to give organizations greater control, flexibility, and freedom.</p>
+    <a class="pbtn" href="#contact">Talk to sales</a>
+  </section>
+
+  <section class="sec wrap">
+    <h2 class="h2">Technology designed around your needs</h2>
+    <div class="tgrid">
+      <div><span class="tile"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><rect x="2.5" y="3" width="13" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="2.5" y="10" width="13" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/></svg></span><p><b>Privately owned infrastructure.</b> Your workloads run on infrastructure owned and operated by Patmos.</p></div>
+      <div><span class="tile"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><circle cx="8" cy="6" r="2.8" stroke="currentColor" stroke-width="1.3"/><path d="M3 15c.6-2.6 2.6-4 5-4M12.5 10.5l2 .8v1.8c0 1.2-.9 2-2 2.4-1.1-.4-2-1.2-2-2.4v-1.8z" stroke="currentColor" stroke-width="1.3"/></svg></span><p><b>Your data stays yours.</b> Patmos will never sell, monetize, or exploit your data.</p></div>
+      <div><span class="tile"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><rect x="4.5" y="4.5" width="9" height="9" rx="1" stroke="currentColor" stroke-width="1.3"/><path d="M7 2v2.5M11 2v2.5M7 13.5V16M11 13.5V16M2 7h2.5M2 11h2.5M13.5 7H16M13.5 11H16" stroke="currentColor" stroke-width="1.3"/></svg></span><p><b>Built for resilience.</b> Enterprise-grade backup and recovery powered by Acronis.</p></div>
+      <div><span class="tile"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M9 2l5.5 2v4.5c0 3.3-2.3 5.7-5.5 7-3.2-1.3-5.5-3.7-5.5-7V4z" stroke="currentColor" stroke-width="1.3"/></svg></span><p><b>Enterprise grade protection.</b> SOC 2 Type II certified and HIPAA compliant.</p></div>
+      <div><span class="tile"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><rect x="2.5" y="3" width="13" height="12" rx="1" stroke="currentColor" stroke-width="1.3"/><path d="M5 6.5h5M5 9.5h3M9.5 11.5l1.5 1.5 3-3" stroke="currentColor" stroke-width="1.3"/></svg></span><p><b>Your rights come first.</b> A Hosting Bill of Rights that protects every customer.</p></div>
+    </div>
+  </section>
+
+  <section class="sec wrap" aria-label="Customer stories">
+    <h2 class="h2 car-head">See how leading organizations build and scale with Patmos</h2>
+    <div class="car-view"><div class="car-track" id="carTrack">
+      <article class="story"><div class="img"></div><div class="txt"><span class="brandname">Bobrick</span><small>Software Development</small><h3>How Bobrick scales its digital presence with long-term support from Patmos</h3><a class="lk small" href="#home">View story <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5l4.5 4.5L6 12.5" stroke="currentColor" stroke-width="1.5"/></svg></a></div></article>
+      <article class="story"><div class="img"></div><div class="txt"><span class="brandname">Customer</span><small>Cloud Infrastructure</small><h3>Customer story placeholder: an independent media platform scaling with Patmos</h3><a class="lk small" href="#home">View story <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5l4.5 4.5L6 12.5" stroke="currentColor" stroke-width="1.5"/></svg></a></div></article>
+      <article class="story"><div class="img"></div><div class="txt"><span class="brandname">Customer</span><small>AI &amp; Compute</small><h3>Customer story placeholder: training models on dedicated hardware</h3><a class="lk small" href="#home">View story <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5l4.5 4.5L6 12.5" stroke="currentColor" stroke-width="1.5"/></svg></a></div></article>
+      <article class="story"><div class="img"></div><div class="txt"><span class="brandname">Customer</span><small>Backup &amp; Recovery</small><h3>Customer story placeholder: recovering in minutes instead of days</h3><a class="lk small" href="#home">View story <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5l4.5 4.5L6 12.5" stroke="currentColor" stroke-width="1.5"/></svg></a></div></article>
+    </div></div>
+    <div class="car-nav">
+      <button class="car-btn" type="button" id="carPrev" aria-label="Previous story"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M10 3.5L5.5 8l4.5 4.5" stroke="currentColor" stroke-width="1.5"/></svg></button>
+      <button class="car-btn" type="button" id="carNext" aria-label="Next story"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5l4.5 4.5L6 12.5" stroke="currentColor" stroke-width="1.5"/></svg></button>
+    </div>
+  </section>
+
+  <section class="sec wrap">
+    <div class="itb">
+      <div class="img img-campus" role="img" aria-label="Placeholder image: Technology Campus at night"></div>
+      <div class="copy"><h2 class="h2">More than a data center</h2><p>Patmos Technology Campuses combine high-performance data centers with community-focused engagement spaces bringing humans and technology together.</p><a class="lk" href="#home">Explore Technology Campus <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5l4.5 4.5L6 12.5" stroke="currentColor" stroke-width="1.5"/></svg></a></div>
+    </div>
+    <div class="itb rev">
+      <div class="copy"><h2 class="h2">Performance that’s entirely yours</h2><p>Dedicated servers give your business the full power of the machine. No shared resources, no unpredictable load, no limits.</p><a class="lk" href="#home">Explore Dedicated Servers <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5l4.5 4.5L6 12.5" stroke="currentColor" stroke-width="1.5"/></svg></a></div>
+      <div class="img img-servers" role="img" aria-label="Placeholder image: server lights"></div>
+    </div>
+  </section>
+
+  <section class="sec wrap">
+    <h2 class="h2">Services without compromise</h2>
+    <p class="lead" style="margin-top:20px">From AI infrastructure and cloud hosting to software, connectivity, backup, and custom data centers, Patmos gives organizations the control, and flexibility they need to grow.</p>
+    <div class="cgrid" id="cgrid"></div>
+  </section>
+
+  <section class="wrap cta">
+    <h2 class="h2">Ready to build what’s next?</h2>
+    <p class="lead">Build, host, and scale on infrastructure designed for performance, privacy, and long-term control.</p>
+    <a class="pbtn" href="#contact">Get started</a>
+  </section>
+</main>
+
+<!-- ================= CONTACT ================= -->
+<main class="page" data-page="contact" hidden>
+  <section class="wrap contact">
+    <div class="contact-intro">
+      <h1 class="h1" style="font-size:clamp(44px,5.4vw,64px)">Contact sales</h1>
+      <p class="lead" style="font-size:16px">Get in touch with our sales teams for demos, onboarding support, or product questions.</p>
+      <div>
+        <h3>Call us directly</h3>
+        <span class="tel">+1 (913) 890-8250</span>
+        <h3>Chat with our sales team</h3>
+        <a class="lk-blue" href="#contact">Chat with sales</a>
+      </div>
+      <div class="feat"><span class="tile"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><circle cx="8" cy="6" r="2.8" stroke="currentColor" stroke-width="1.3"/><path d="M3 15c.6-2.6 2.6-4 5-4" stroke="currentColor" stroke-width="1.3"/></svg></span><div><b>Privately owned infrastructure</b><span>Your workloads run on infrastructure owned and operated by Patmos.</span></div></div>
+      <div class="feat"><span class="tile"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M5 14h8a3 3 0 00.3-6A4.5 4.5 0 004.6 9 2.5 2.5 0 005 14z" stroke="currentColor" stroke-width="1.3"/></svg></span><div><b>Your data stays yours</b><span>Patmos will never sell, monetize, or exploit your data.</span></div></div>
+      <div class="feat"><span class="tile"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M9 2l5.5 2v4.5c0 3.3-2.3 5.7-5.5 7-3.2-1.3-5.5-3.7-5.5-7V4z" stroke="currentColor" stroke-width="1.3"/></svg></span><div><b>Enterprise grade protection</b><span>SOC 2 Type II certified and HIPAA compliant.</span></div></div>
+    </div>
+
+    <form class="form" id="contactForm" novalidate>
+      <h2>Request a call</h2>
+      <div class="ntf-slot" id="ntfSlot"><div><div class="ntf" role="status"><span class="ico"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="10" fill="currentColor"/><path d="M6.5 11.2l3 3 6-6.2" fill="none" stroke="var(--bg)" stroke-width="1.8"/></svg></span><div><b>Thanks, we’ll be in touch</b><span>A member of our sales team will call you within one business day. (Prototype: nothing was sent.)</span></div><button class="ntf-close" type="button" id="ntfClose" aria-label="Dismiss"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" stroke="currentColor" stroke-width="1.5"/></svg></button></div></div></div>
+      <div><label class="fld" data-req="Enter your full name."><input id="fName" type="text" placeholder=" " autocomplete="off"><span>Full name*</span></label><div class="err-slot"><div><p class="err"></p></div></div></div>
+      <div><label class="fld" data-req="Enter an email address like name@company.com." data-type="email"><input id="fEmail" type="email" placeholder=" " autocomplete="off"><span>Email*</span></label><div class="err-slot"><div><p class="err"></p></div></div></div>
+      <div><label class="fld" data-req="Enter a phone number we can call."><input id="fPhone" type="tel" placeholder=" " autocomplete="off"><span>Phone number*</span></label><div class="err-slot"><div><p class="err"></p></div></div></div>
+      <div><label class="fld" data-req="Enter your company name."><input id="fCompany" type="text" placeholder=" " autocomplete="off"><span>Company*</span></label><div class="err-slot"><div><p class="err"></p></div></div></div>
+      <label class="sel"><select id="fTopic" aria-label="Interested in"><option value="">Choose</option><option>Dedicated Servers</option><option>Custom Datacenters</option><option>AI &amp; Compute</option><option>Cloud &amp; Hosting</option><option>Backup &amp; Recovery</option><option>Colocation &amp; Connectivity</option></select><span class="sel-label">Interested in</span><span class="sel-ico"><svg class="i-chev" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="1.5"/></svg><svg class="i-x" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.5"/></svg></span></label>
+      <label class="fld"><textarea id="fComments" placeholder=" "></textarea><span>Comments</span></label>
+      <label class="cb"><input type="checkbox" id="fNews"><span class="cb-box"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2.5 7.2l3 3 6-6.4" stroke="currentColor" stroke-width="1.8"/></svg></span><span>I agree to receive news and occasional email messages from Patmos Hosting, Inc. I can unsubscribe at any time.</span></label>
+      <p class="fine">By submitting this form you agree to our <a href="#contact">Privacy Policy</a>.</p>
+      <div class="form-end"><button class="pbtn" type="submit">Contact us</button></div>
+    </form>
+  </section>
+
+  <section class="wrap support">
+    <h2 class="h2">Looking for support?</h2>
+    <div class="sgrid">
+      <a class="clink" href="#support"><b>Support</b><span>Need help with your service? Visit the Patmos Support Center to raise and view tickets.</span><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 10h13M11 5l5 5-5 5" stroke="currentColor" stroke-width="1.5"/></svg></a>
+      <a class="clink" href="#support"><b>Manage your Patmos account</b><span>Manage your Patmos, Joe’s Datacenter or Codero account.</span><svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 10h13M11 5l5 5-5 5" stroke="currentColor" stroke-width="1.5"/></svg></a>
+    </div>
+  </section>
+</main>
+
+<!-- ================= SUPPORT ================= -->
+<main class="page" data-page="support" hidden>
+  <section class="wrap help">
+    <h1 class="h1" style="font-size:clamp(44px,5.4vw,64px)">How can we help?</h1>
+    <div class="reach"><b>Call us directly</b><span>+1 (913) 890-8250</span></div>
+  </section>
+  <section class="wrap" style="padding-block: 0 24px">
+    <div class="cgrid" style="margin-top:0">
+      <div class="framed"><h3>View and Raise Tickets</h3><p>Need help with your service? Visit the Patmos Support Center to raise and view tickets.</p><div class="acts"><a class="ln small" href="#support">Access Patmos Help Center <svg class="i-next" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5l4.5 4.5L6 12.5" stroke="currentColor" stroke-width="1.5"/></svg></a></div></div>
+      <div class="framed"><h3>Manage your Patmos account</h3><p>Manage your Patmos account.</p><div class="acts"><a class="ln small" href="#support">Manage your Patmos Account <svg class="i-next" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5l4.5 4.5L6 12.5" stroke="currentColor" stroke-width="1.5"/></svg></a></div></div>
+      <div class="framed"><h3>Manage other accounts</h3><p>If you had an account with Joe’s Datacenter or Codero, you can manage it here.</p><div class="acts"><a class="ln small" href="#support">Joe’s Datacenter <svg class="i-next" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5l4.5 4.5L6 12.5" stroke="currentColor" stroke-width="1.5"/></svg></a><a class="ln small" href="#support">Codero <svg class="i-next" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5l4.5 4.5L6 12.5" stroke="currentColor" stroke-width="1.5"/></svg></a></div></div>
+    </div>
+  </section>
+  <section class="wrap faq">
+    <h2 class="h2">Frequently asked questions</h2>
+    <div class="faq-list" id="faqList">
+      <div class="faq-item open"><button class="faq-q" type="button" aria-expanded="true" aria-controls="faqA0" id="faqQ0">What does Patmos actually do?<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5"/></svg></button><div class="faq-a" id="faqA0" role="region" aria-labelledby="faqQ0"><div><p>We're a full-stack alternative to big tech — hosting, compute, and IT services run by humans, for humans. That spans hosting and cloud, colocation, backup and disaster recovery, custom high-density compute campuses, domains, and custom software development. The difference is in who it all answers to: we're independent, built on a simple idea that the company running your critical infrastructure should be accountable to you, not to its own scale.</p></div></div></div>
+      <div class="faq-item"><button class="faq-q" type="button" aria-expanded="false" aria-controls="faqA1" id="faqQ1">What does Patmos offer?<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5"/></svg></button><div class="faq-a" id="faqA1" role="region" aria-labelledby="faqQ1"><div><p>Dedicated servers, custom datacenters, AI and compute, cloud and hosting, backup and recovery, colocation and connectivity, software development, and brand and design.</p></div></div></div>
+      <div class="faq-item"><button class="faq-q" type="button" aria-expanded="false" aria-controls="faqA2" id="faqQ2">What do you mean when you say everything stays "yours"?<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5"/></svg></button><div class="faq-a" id="faqA2" role="region" aria-labelledby="faqQ2"><div><p>Your workloads run on infrastructure owned and operated by Patmos, and Patmos will never sell, monetize, or exploit your data.</p></div></div></div>
+      <div class="faq-item"><button class="faq-q" type="button" aria-expanded="false" aria-controls="faqA3" id="faqQ3">How is Patmos different from a big cloud provider?<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5"/></svg></button><div class="faq-a" id="faqA3" role="region" aria-labelledby="faqQ3"><div><p class="ph">Answer to come. This is placeholder text in the prototype.</p></div></div></div>
+      <div class="faq-item"><button class="faq-q" type="button" aria-expanded="false" aria-controls="faqA4" id="faqQ4">Who is Patmos for?<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5"/></svg></button><div class="faq-a" id="faqA4" role="region" aria-labelledby="faqQ4"><div><p class="ph">Answer to come. This is placeholder text in the prototype.</p></div></div></div>
+      <div class="faq-item"><button class="faq-q" type="button" aria-expanded="false" aria-controls="faqA5" id="faqQ5">Who owns my data?<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5"/></svg></button><div class="faq-a" id="faqA5" role="region" aria-labelledby="faqQ5"><div><p class="ph">Answer to come. This is placeholder text in the prototype.</p></div></div></div>
+      <div class="faq-item"><button class="faq-q" type="button" aria-expanded="false" aria-controls="faqA6" id="faqQ6">What is the Client Bill of Rights?<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5"/></svg></button><div class="faq-a" id="faqA6" role="region" aria-labelledby="faqQ6"><div><p class="ph">Answer to come. This is placeholder text in the prototype.</p></div></div></div>
+      <div class="faq-item"><button class="faq-q" type="button" aria-expanded="false" aria-controls="faqA7" id="faqQ7">Will I get locked in?<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5"/></svg></button><div class="faq-a" id="faqA7" role="region" aria-labelledby="faqQ7"><div><p class="ph">Answer to come. This is placeholder text in the prototype.</p></div></div></div>
+      <div class="faq-item"><button class="faq-q" type="button" aria-expanded="false" aria-controls="faqA8" id="faqQ8">How does Patmos handle privacy?<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5"/></svg></button><div class="faq-a" id="faqA8" role="region" aria-labelledby="faqQ8"><div><p class="ph">Answer to come. This is placeholder text in the prototype.</p></div></div></div>
+      <div class="faq-item"><button class="faq-q" type="button" aria-expanded="false" aria-controls="faqA9" id="faqQ9">Where is my data physically located?<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5"/></svg></button><div class="faq-a" id="faqA9" role="region" aria-labelledby="faqQ9"><div><p class="ph">Answer to come. This is placeholder text in the prototype.</p></div></div></div>
+    </div>
+  </section>
+</main>
+
+<footer class="ftr">
+  <div class="wrap">
+    <div class="fcols" id="fcols"></div>
+    <div class="fbot">
+      <span>© 2026 Patmos Hosting, Inc. All rights reserved.</span>
+      <div class="links">
+        <button type="button" class="linkbtn" id="cookieSettings">Cookie Settings</button><a href="#home">Terms of Service</a><a href="#home">Privacy Policy</a>
+        <div class="theme" role="group" aria-label="Color mode">
+          <span class="theme-ind" id="themeInd" aria-hidden="true"></span>
+          <button type="button" data-theme-set="system" aria-label="System" aria-pressed="false"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><rect x="1.5" y="2.5" width="11" height="7.5" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M5 12.5h4" stroke="currentColor" stroke-width="1.2"/></svg></button>
+          <button type="button" data-theme-set="light" aria-label="Light" aria-pressed="false"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="2.5" stroke="currentColor" stroke-width="1.2"/><path d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13M2.8 2.8l1 1M10.2 10.2l1 1M2.8 11.2l1-1M10.2 3.8l1-1" stroke="currentColor" stroke-width="1.2"/></svg></button>
+          <button type="button" data-theme-set="dark" aria-label="Dark" aria-pressed="false"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M11.5 8.2A4.8 4.8 0 015.8 2.5a4.8 4.8 0 105.7 5.7z" stroke="currentColor" stroke-width="1.2"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<div class="ck" id="ck" role="region" aria-label="Cookie consent">
+  <p>We use cookies to enhance your experience, understand how our site is used, and improve our services. You can manage your preferences at any time. Learn more in our <u>Privacy Policy</u>.</p>
+  <div class="acts"><button class="pbtn ghost small" type="button" data-ck>Reject All</button><button class="pbtn solid small" type="button" data-ck>Accept All</button></div>
+</div>
+
+<script>
+(function () {
+  const root = document.documentElement;
+  const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const MENUS = {
+    solutions: [['Infrastructure', ['AI Infrastructure', 'Custom Datacenters', 'Colocation & Connectivity', 'Backup & Recovery']], ['Hosting', ['VPS Hosting', 'Domains', 'Managed Wordpress', 'Cloud Services']], ['Design & Build', ['Intensive Workshop', 'Custom Applications', 'Software Development', 'Brand & Design']]],
+    company: [['About', ['About', 'Careers', 'Bill of Rights']], ['Contact', ['Contact sales', 'Support']], ['Policies', ['Privacy', 'Use Policy', 'Abuse Policy']]],
+    resources: [['Learn', ['Guides', 'Documentation']], ['Stories', ['Customer stories']], ['Brand', ['Brand portal', 'Motion guidelines']]]
+  };
+  const linkFor = l => /^support$/i.test(l) ? '#support' : /contact/i.test(l) ? '#contact' : '#home';
+
+  /* ---------- Desktop mega menu ---------- */
+  const hdr = document.getElementById('hdr');
+  const megaCols = document.getElementById('megaCols');
+  const scrim = document.getElementById('scrim');
+  const navItems = [...hdr.querySelectorAll('.nav-item')];
+  let openKey = null;
+  const fill = key => { megaCols.innerHTML = MENUS[key].map(([h, ls]) => `<div><h5>${h}</h5>${ls.map(l => `<a href="${linkFor(l)}">${l}</a>`).join('')}</div>`).join(''); };
+  function setMenu(key) {
+    navItems.forEach(b => b.setAttribute('aria-expanded', b.dataset.menu === key));
+    if (!key) { hdr.classList.remove('open'); scrim.classList.remove('on'); openKey = null; return; }
+    if (openKey && openKey !== key) {
+      megaCols.classList.add('swap'); megaCols.style.opacity = '0'; fill(key);
+      void megaCols.offsetHeight; megaCols.style.opacity = ''; setTimeout(() => megaCols.classList.remove('swap'), 200);
+    } else fill(key);
+    hdr.classList.add('open'); scrim.classList.add('on'); openKey = key;
+  }
+  navItems.forEach(b => b.addEventListener('click', () => setMenu(openKey === b.dataset.menu ? null : b.dataset.menu)));
+  scrim.addEventListener('click', () => setMenu(null));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { setMenu(null); closeMobile(); } });
+
+  /* ---------- Mobile menu ---------- */
+  const burger = document.getElementById('burger');
+  const msub = document.getElementById('msub');
+  const mtitle = document.getElementById('mtitle');
+  function closeMobile() {
+    if (!hdr.classList.contains('mopen')) return;
+    hdr.classList.remove('mopen'); burger.setAttribute('aria-expanded', 'false'); burger.setAttribute('aria-label', 'Menu');
+    document.body.style.overflow = '';
+    setTimeout(() => hdr.classList.remove('sub'), 220);
+  }
+  burger.addEventListener('click', () => {
+    if (hdr.classList.contains('mopen')) { closeMobile(); return; }
+    hdr.classList.add('mopen'); burger.setAttribute('aria-expanded', 'true'); burger.setAttribute('aria-label', 'Close menu');
+    document.body.style.overflow = 'hidden';
+  });
+  hdr.querySelectorAll('[data-sub]').forEach(b => b.addEventListener('click', () => {
+    mtitle.textContent = b.textContent.trim();
+    msub.innerHTML = MENUS[b.dataset.sub].map(([h, ls]) => `<h5>${h}</h5>${ls.map(l => `<a href="${linkFor(l)}">${l}</a>`).join('')}`).join('');
+    hdr.classList.add('sub');
+  }));
+  document.getElementById('mback').addEventListener('click', () => hdr.classList.remove('sub'));
+
+  /* ---------- Page transitions (hash routing) ---------- */
+  const pages = { home: document.querySelector('[data-page="home"]'), contact: document.querySelector('[data-page="contact"]'), support: document.querySelector('[data-page="support"]') };
+  const routeOf = () => { const h = location.hash.slice(1); return pages[h] ? h : 'home'; };
+  let current = routeOf();
+  let busy = null;
+  let byLink = false;
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  function show(name, first, scroll) {
+    Object.entries(pages).forEach(([k, el]) => { el.hidden = k !== name; el.classList.remove('leaving', 'entered'); });
+    const el = pages[name];
+    window.scrollTo(0, scroll || 0);
+    el.classList.add('entering');
+    void el.offsetHeight;
+    el.classList.remove('entering'); el.classList.add('entered');
+    document.title = ({ contact: 'Contact sales · ', support: 'Support · ' }[name] || '') + 'Patmos Motion Prototype';
+    if (!first) { const h = el.querySelector('h1'); if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); } }
+    if (name === 'home') carGo(0);
+  }
+  function go(name, scroll) {
+    setMenu(null); closeMobile();
+    if (name === current) { window.scrollTo({ top: 0, behavior: reduced() ? 'auto' : 'smooth' }); return; }
+    clearTimeout(busy);
+    pages[current].classList.remove('entered');
+    pages[current].classList.add('leaving');
+    const next = name;
+    busy = setTimeout(() => { current = next; show(next, false, scroll); }, 200);
+  }
+  /* Forward (a link): start at the top. Back or forward in the browser: return to the saved scroll position. */
+  window.addEventListener('hashchange', () => {
+    const scroll = byLink ? 0 : (history.state && history.state.scroll) || 0;
+    byLink = false;
+    go(routeOf(), scroll);
+  });
+  document.addEventListener('click', e => {
+    const a = e.target.closest('a[href^="#"]');
+    if (!a) return;
+    const h = a.getAttribute('href').slice(1); const target = pages[h] ? h : 'home';
+    e.preventDefault();
+    if (location.hash !== '#' + target) {
+      history.replaceState({ scroll: window.scrollY }, '');
+      byLink = true;
+      location.hash = target;
+    } else go(target);
+  });
+
+  /* ---------- Carousel ---------- */
+  const carTrack = document.getElementById('carTrack');
+  const carPrev = document.getElementById('carPrev');
+  const carNext = document.getElementById('carNext');
+  const cards = [...carTrack.children];
+  let idx = 0;
+  const step = () => cards[0].offsetWidth + 24;
+  const maxIdx = () => Math.max(0, cards.length - Math.max(1, Math.floor((carTrack.parentElement.clientWidth - 140) / step())));
+  function carGo(i) {
+    idx = Math.max(0, Math.min(i, maxIdx()));
+    carTrack.style.transform = `translateX(${-idx * step()}px)`;
+    carPrev.disabled = idx === 0; carNext.disabled = idx >= maxIdx();
+  }
+  carPrev.addEventListener('click', () => carGo(idx - 1));
+  carNext.addEventListener('click', () => carGo(idx + 1));
+  window.addEventListener('resize', () => carGo(idx));
+
+  /* ---------- Service cards ---------- */
+  const SERVICES = [
+    ['Dedicated Servers', 'Dedicated Servers provide full access to dedicated hardware, delivering maximum performance, control and reliability.', [['Learn more', '#home'], ['Order now', '#contact']], true],
+    ['Custom Datacenters', 'Patmos Custom Datacenters are purpose-built around your power, performance, and scalability.', [['Contact sales', '#contact']]],
+    ['AI & Compute', 'High-performance AI Infrastructure providing compute environments built for demanding AI workloads.', [['Contact sales', '#contact']]],
+    ['Cloud & Hosting', 'Flexible Cloud, VPS, and hosting solutions designed to grow with your business.', [['Learn more', '#home']]],
+    ['Backup & Recovery', 'Enterprise backup and disaster recovery solutions designed to protect critical systems.', [['Learn more', '#home']]],
+    ['Colocation & Connectivity', 'Enterprise colocation, peering, and dark fiber solutions built for performance and reliability.', [['Contact sales', '#contact']]],
+    ['Software Development', 'Native apps, web applications, and digital products built around your business goals.', [['Contact sales', '#contact']]],
+    ['Brand & Design', 'Websites, branding, and digital experiences designed to help organizations grow.', [['Contact sales', '#contact']]]
+  ];
+  const chev = '<svg class="i-next" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5l4.5 4.5L6 12.5" stroke="currentColor" stroke-width="1.5"/></svg>';
+  const esc = s => s.replace(/&/g, '&amp;');
+  document.getElementById('cgrid').innerHTML = SERVICES.map(([t, d, acts, isNew]) =>
+    `<div class="framed"><h3>${esc(t)}${isNew ? '<span class="new">New</span>' : ''}</h3><p>${d}</p><div class="acts">${acts.map(([l, h]) => `<a class="ln small" href="${h}">${l} ${chev}</a>`).join('')}</div></div>`).join('');
+
+  /* ---------- Footer ---------- */
+  const FOOT = [['Infrastructure', ['AI Infrastructure', 'Custom Datacenters', 'Colocation & Connectivity', 'Backup & Recovery']], ['Hosting', ['VPS Hosting', 'Domains', 'Managed WordPress', 'Cloud Services']], ['Design & Build', ['Intensive Workshops', 'Custom Applications', 'Software Development', 'Brand & Design']],
+    ['Contact', ['Contact Us', 'Support']], ['Company', ['About', 'Careers', 'Use Policy', 'Privacy', 'Abuse Policy', 'Bill of Rights']], ['Social', ['Facebook', 'Instagram', 'LinkedIn']]];
+  document.getElementById('fcols').innerHTML = FOOT.map(([h, ls]) => `<div><h4>${h}</h4><ul>${ls.map(l => `<li><a href="${linkFor(l)}">${esc(l)}</a></li>`).join('')}</ul></div>`).join('');
+
+  /* ---------- Color mode (3 states) ---------- */
+  const themeBtns = [...document.querySelectorAll('[data-theme-set]')];
+  const themeInd = document.getElementById('themeInd');
+  function applyTheme(pref, save) {
+    if (pref === 'system') root.removeAttribute('data-theme'); else root.setAttribute('data-theme', pref);
+    root.dataset.pref = pref;
+    themeBtns.forEach((b, i) => { const on = b.dataset.themeSet === pref; b.setAttribute('aria-pressed', on); if (on) themeInd.style.transform = `translateX(${i * 26}px)`; });
+    if (save) { try { localStorage.setItem('patmos-proto-theme', pref); } catch (e) {} }
+  }
+  themeBtns.forEach(b => b.addEventListener('click', () => applyTheme(b.dataset.themeSet, true)));
+  applyTheme(root.dataset.pref || 'dark', false);
+
+  /* ---------- Contact form ---------- */
+  const form = document.getElementById('contactForm');
+  const ntfSlot = document.getElementById('ntfSlot');
+  const emailOk = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+  const fields = [...form.querySelectorAll('.fld[data-req]')];
+  function check(fld) {
+    const input = fld.querySelector('input');
+    const v = input.value.trim();
+    const bad = !v || (fld.dataset.type === 'email' && !emailOk(v));
+    const slot = fld.nextElementSibling;
+    if (bad) slot.querySelector('.err').textContent = fld.dataset.req;
+    slot.classList.toggle('in', bad); fld.classList.toggle('invalid', bad); input.setAttribute('aria-invalid', bad);
+    return !bad;
+  }
+  fields.forEach(fld => {
+    const input = fld.querySelector('input');
+    input.addEventListener('input', () => { if (fld.classList.contains('invalid')) check(fld); });
+  });
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const ok = fields.map(check).every(Boolean);
+    if (!ok) { const first = form.querySelector('.fld.invalid input'); if (first) first.focus(); return; }
+    ntfSlot.classList.add('in');
+    form.reset();
+    fields.forEach(fld => { fld.classList.remove('invalid'); fld.nextElementSibling.classList.remove('in'); });
+  });
+  document.getElementById('ntfClose').addEventListener('click', () => ntfSlot.classList.remove('in'));
+  document.getElementById('fTopic').addEventListener('change', e => e.target.blur());
+
+  /* ---------- Cookie banner ---------- */
+  const ck = document.getElementById('ck');
+  let ckDone = false;
+  try { ckDone = sessionStorage.getItem('patmos-proto-ck') === '1'; } catch (e) {}
+  if (!ckDone) setTimeout(() => ck.classList.add('on'), 800);
+  ck.querySelectorAll('[data-ck]').forEach(b => b.addEventListener('click', () => {
+    ck.classList.remove('on');
+    try { sessionStorage.setItem('patmos-proto-ck', '1'); } catch (e) {}
+  }));
+  document.getElementById('cookieSettings').addEventListener('click', () => setTimeout(() => ck.classList.add('on'), 250));
+
+  /* ---------- FAQ (Accordion) ---------- */
+  document.querySelectorAll('.faq-q').forEach(q => q.addEventListener('click', () => {
+    const item = q.closest('.faq-item');
+    const open = !item.classList.contains('open');
+    item.classList.toggle('open', open);
+    q.setAttribute('aria-expanded', open);
+  }));
+
+  /* ---------- Keyboard-only focus ring on fields ---------- */
+  let viaTab = false;
+  document.addEventListener('keydown', e => { if (e.key === 'Tab') viaTab = true; }, true);
+  document.addEventListener('pointerdown', () => { viaTab = false; }, true);
+  document.querySelectorAll('.fld input, .fld textarea, .sel select').forEach(el => {
+    el.addEventListener('focus', () => el.classList.toggle('kb-focus', viaTab));
+    el.addEventListener('blur', () => el.classList.remove('kb-focus'));
+  });
+
+  /* ---------- Start ---------- */
+  show(current, true);
+})();
+</script>
+</body>
+</html>
